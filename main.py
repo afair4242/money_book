@@ -3,7 +3,7 @@ import openpyxl as op
 import io
 import pandas as pd
 import requests
-
+import os
 from dotenv import load_dotenv
 
 # 로컬 환경에서는 .env 파일을 로드
