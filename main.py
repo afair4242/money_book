@@ -4,6 +4,10 @@ import io
 import pandas as pd
 import requests
 
+api_url = st.secrets["D1_API_URL"]
+
+# API 요청 예제
+D1_API_URL = requests.get(api_url)
 
 HEADERS = {
     "Authorization": "Bearer AmMcKixHW5WauWQYrgdHg8mK35tL2cJJ18mryClN",
