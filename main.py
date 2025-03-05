@@ -11,7 +11,7 @@ load_dotenv()
 
 # secrets.toml이 있으면 사용, 없으면 환경 변수에서 가져오기
 D1_API_URL = st.secrets.get("D1_API_URL", os.getenv("D1_API_URL"))
-Bearer = st.secrets.get("D1_API_URL", os.getenv("Bearer"))
+Bearer = st.secrets.get("Bearer", os.getenv("Bearer"))
 
 HEADERS = {
     "Authorization": Bearer,
