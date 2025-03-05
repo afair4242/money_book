@@ -182,14 +182,14 @@ with tab3:
             if st.button("삭제", key=f"delete_{category}"):
                 del edited_category_keywords[category]
                 delete_category(category)
-                st.experimental_rerun()
+                st.rerun()
 
     # 모든 변경 사항 저장
     if st.button("저장"):
         success = update_category_data(edited_category_keywords)
         if success:
             st.success("카테고리가 저장되었습니다.")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("카테고리 저장 중 오류가 발생했습니다.")
 
