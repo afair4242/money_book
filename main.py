@@ -10,11 +10,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # secrets.toml이 있으면 사용, 없으면 환경 변수에서 가져오기
-api_url = st.secrets.get("D1_API_URL", os.getenv("D1_API_URL"))
-D1_API_URL = api_url
+D1_API_URL = st.secrets.get("D1_API_URL", os.getenv("D1_API_URL"))
+Bearer = st.secrets.get("D1_API_URL", os.getenv("Bearer"))
 
 HEADERS = {
-    "Authorization": "Bearer AmMcKixHW5WauWQYrgdHg8mK35tL2cJJ18mryClN",
+    "Authorization": Bearer,
     "Content-Type": "application/json"
 }
 
