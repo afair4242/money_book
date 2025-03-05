@@ -4,13 +4,6 @@ import io
 import pandas as pd
 import requests
 
-# Cloudflare D1 API 엔드포인트
-D1_API_URL = "https://api.cloudflare.com/client/v4/accounts/80f750029113cb7940c8669c36920718/d1/database/220a88dd-67f2-443e-9887-349841ff45a2/query"
-
-HEADERS = {
-    "Authorization": "Bearer AmMcKixHW5WauWQYrgdHg8mK35tL2cJJ18mryClN",
-    "Content-Type": "application/json"
-}
 
 # D1에서 카테고리 키워드 가져오기
 def fetch_categories():
