@@ -14,9 +14,9 @@ D1_API_URL = st.secrets.get("D1_API_URL", os.getenv("D1_API_URL"))
 Bearer = st.secrets.get("Bearer", os.getenv("Bearer"))
 
 HEADERS = {
-    "Authorization": "Bearer AmMcKixHW5WauWQYrgdHg8mK35tL2cJJ18mryClN",
-    "Content-Type": "application/json"
-}
+        "Authorization": f"Bearer {Bearer}",
+        "Content-Type": "application/json"
+    }
 
 
 # D1에서 카테고리 키워드 가져오기
