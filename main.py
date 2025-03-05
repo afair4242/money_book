@@ -1,21 +1,68 @@
 import streamlit as st
 import openpyxl as op
 import io
-import json
-import os
 import pandas as pd
+import requests
+
+# Cloudflare D1 API 엔드포인트
+D1_API_URL = "https://api.cloudflare.com/client/v4/accounts/80f750029113cb7940c8669c36920718/d1/database/220a88dd-67f2-443e-9887-349841ff45a2/query"
+
+HEADERS = {
+    "Authorization": "Bearer AmMcKixHW5WauWQYrgdHg8mK35tL2cJJ18mryClN",
+    "Content-Type": "application/json"
+}
+
+# D1에서 카테고리 키워드 가져오기
+def fetch_categories():
+    query = {"sql": "SELECT category, keyword FROM categories"}
+    response = requests.post(D1_API_URL, headers=HEADERS, json=query)
+
+    if response.status_code == 200:
+        data = response.json()
+        result = data.get("result", [])
+        if result and isinstance(result, list) and "results" in result[0]:
+            results = result[0]["results"]
+        else:
+            st.error("올바른 데이터 형식이 아닙니다.")
+            return {}
+
+        category_keywords = {item.get("category", "").strip(): item.get("keyword", "").strip().split(",") for item in results}
+        return category_keywords
+    else:
+        st.error(f"카테고리 데이터를 불러오는 중 오류 발생 (HTTP {response.status_code})")
+        return {}
+
+# D1에 카테고리 키워드 업데이트
+def update_category_data(category_data):
+    success = True
+    for category, keywords in category_data.items():
+        keyword_str = ", ".join(keywords)
+        query = {
+            "sql": "INSERT INTO categories (category, keyword) VALUES (?, ?) ON CONFLICT(category) DO UPDATE SET keyword = ?",
+            "params": [category, keyword_str, keyword_str]
+        }
+        response = requests.post(D1_API_URL, headers=HEADERS, json=query)
+        if response.status_code != 200:
+            success = False
+    return success
+
+# D1에서 카테고리 삭제
+def delete_category(category):
+    query = {
+        "sql": "DELETE FROM categories WHERE category = ?",
+        "params": [category]
+    }
+    response = requests.post(D1_API_URL, headers=HEADERS, json=query)
+    return response.status_code == 200
 
 # 페이지 설정
-st.set_page_config(
-    page_title="엑셀가계부",  # 브라우저 탭 타이틀
-    page_icon="💰"  # 가계부 관련 아이콘 (이모지 사용 가능)
-)
+st.set_page_config(page_title="엑셀가계부", page_icon="💰")
 
 st.title("엑셀 정산 프로그램")
-st.write('개인농협+회사농협+하나카드 엑셀준비 (다운로드 후 다른이름으로 저장 xlsx)')
-st.write('홈페이지 제작 또는 기타 개인수익과 카드에 포함되지 않는 항목은 수동입력해야함')
+st.write("홈페이지 제작 또는 기타 개인수익과 카드에 포함되지 않는 항목은 수동입력해야 합니다.")
 
 tab1, tab2, tab3 = st.tabs(["호스팅수입(회사)", "배달수입(개인)", "신용카드 지출정산"])
+
 
 with tab1:
     #st.subheader("회사수익(호스팅) 정산")
@@ -110,68 +157,64 @@ with tab2:
         except Exception as e:
             st.error(f"파일을 읽는 중 오류가 발생했습니다: {e}")
 
+
 with tab3:
 
-    #st.subheader("신용카드 지출정산")
-    # 엑셀 파일 업로드 UI
-    uploaded_file = st.file_uploader("신용카드 엑셀 파일을 업로드하세요", type=["xlsx"],key="file_uploader_3")
+    # 엑셀 파일 업로드
+    uploaded_file = st.file_uploader("신용카드 엑셀 파일을 업로드하세요", type=["xlsx"], key="file_uploader_3")
     st.write('---')
+    # 카테고리 로드
+    category_keywords = fetch_categories()
+    edited_category_keywords = category_keywords.copy()
 
-    # JSON 파일 경로
-    JSON_FILE = "categories.json"
+    # 카테고리 추가 UI
+    new_category = st.text_input("새로운 카테고리 추가")
+    if new_category and new_category not in edited_category_keywords:
+        edited_category_keywords[new_category] = []
 
-    # 기본 카테고리 목록
-    categories = ["식비", "간식", "주유", "물품", "도메인", "호스팅", "구독", "기타",
-                "통신비", "메리츠", "건강보험", "전기세"]
+    # 카테고리 키워드 수정 및 삭제 UI
+    for category in list(edited_category_keywords.keys()):
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            keywords = st.text_input(f"{category} 카테고리 키워드 (쉼표로 구분)", ", ".join(edited_category_keywords[category]))
+            edited_category_keywords[category] = [kw.strip() for kw in keywords.split(",") if kw.strip()]
+        with col2:
+            if st.button("삭제", key=f"delete_{category}"):
+                del edited_category_keywords[category]
+                delete_category(category)
+                st.experimental_rerun()
 
-    # JSON 파일 로드 또는 생성
-    if os.path.exists(JSON_FILE):
-        with open(JSON_FILE, "r", encoding="utf-8") as f:
-            category_keywords = json.load(f)
-    else:
-        category_keywords = {category: [] for category in categories}
-        with open(JSON_FILE, "w", encoding="utf-8") as f:
-            json.dump(category_keywords, f, ensure_ascii=False, indent=4)
-
-
-    # 사용자 입력을 받아 각 카테고리에 해당하는 키워드 저장 (textarea 높이 2줄)
-    updated_keywords = {}
-    for category in categories:
-        keywords = st.text_input(f"{category} 카테고리에 포함될 키워드 (쉼표로 구분)", 
-                                ", ".join(category_keywords.get(category, [])))
-        updated_keywords[category] = [kw.strip() for kw in keywords.split(",") if kw.strip()]
-
-    # 변경된 키워드를 JSON 파일에 저장
-    if st.button("키워드 저장"):
-        with open(JSON_FILE, "w", encoding="utf-8") as f:
-            json.dump(updated_keywords, f, ensure_ascii=False, indent=4)
-        st.success("키워드가 저장되었습니다.")
-
+    # 모든 변경 사항 저장
+    if st.button("저장"):
+        success = update_category_data(edited_category_keywords)
+        if success:
+            st.success("카테고리가 저장되었습니다.")
+            st.experimental_rerun()
+        else:
+            st.error("카테고리 저장 중 오류가 발생했습니다.")
 
 
+    
     if uploaded_file is not None:
         try:
-            # 엑셀 파일 읽기
             wb = op.load_workbook(io.BytesIO(uploaded_file.getvalue()), data_only=True)
-            ws = wb.active  # 활성화된 시트 선택
+            ws = wb.active
 
-            # 카테고리별 합계 저장용 딕셔너리 및 세부 항목 리스트 초기화
-            category_totals = {category: 0 for category in categories}
-            category_details = {category: [] for category in categories}
-            unclassified_items = []  # 미분류 항목 저장 리스트
-            unclassified_total = 0  # 미분류 항목 합계
-            overall_total = 0  # 전체 합계
+            category_totals = {category: 0 for category in edited_category_keywords.keys()}
+            category_details = {category: [] for category in edited_category_keywords.keys()}
+            unclassified_items = []
+            unclassified_total = 0
+            overall_total = 0
 
-            # E열(설명)과 F열(금액) 탐색
-            for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=5, max_col=6):  # E, F 컬럼 탐색
-                description = row[0].value  # E열: 설명
-                amount = row[1].value  # F열: 금액
+            for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=5, max_col=6):
+                description = row[0].value
+                amount = row[1].value
 
                 if isinstance(amount, (int, float)) and isinstance(description, str):
-                    matched = False  # 항목이 분류되었는지 여부
-                    overall_total += amount  # 전체 합계 누적
+                    matched = False
+                    overall_total += amount
 
-                    for category, keywords in updated_keywords.items():
+                    for category, keywords in edited_category_keywords.items():
                         if any(keyword in description for keyword in keywords):
                             category_totals[category] += amount
                             category_details[category].append({"항목": description, "금액": amount})
@@ -182,21 +225,17 @@ with tab3:
                         unclassified_items.append({"항목": description, "금액": amount})
                         unclassified_total += amount
 
-            # 결과 출력
             for category, total in category_totals.items():
                 st.subheader(f"{category} 합계: {total} 원")
                 if category_details[category]:
-                    st.caption("📌 해당 카테고리에 포함된 항목:")
                     df = pd.DataFrame(category_details[category])
                     st.table(df)
 
-            # 미분류 항목 출력
             if unclassified_items:
                 st.subheader(f"❗ 미분류 항목 합계: {unclassified_total} 원")
                 df_unclassified = pd.DataFrame(unclassified_items)
                 st.table(df_unclassified)
 
-            # 전체 합계 출력
             st.markdown("---")
             st.subheader(f"💰 전체 합계: {overall_total} 원")
 
