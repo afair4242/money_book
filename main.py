@@ -5,6 +5,12 @@ import pandas as pd
 import requests
 
 
+HEADERS = {
+    "Authorization": "Bearer AmMcKixHW5WauWQYrgdHg8mK35tL2cJJ18mryClN",
+    "Content-Type": "application/json"
+}
+
+
 # D1에서 카테고리 키워드 가져오기
 def fetch_categories():
     query = {"sql": "SELECT category, keyword FROM categories"}
