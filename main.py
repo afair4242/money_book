@@ -4,6 +4,15 @@ import io
 import pandas as pd
 import requests
 
+from dotenv import load_dotenv
+
+# 로컬 환경에서는 .env 파일을 로드
+load_dotenv()
+
+# secrets.toml이 있으면 사용, 없으면 환경 변수에서 가져오기
+api_url = st.secrets.get("D1_API_URL", os.getenv("D1_API_URL"))
+
+st.write("API URL:", api_url)
 
 HEADERS = {
     "Authorization": "Bearer AmMcKixHW5WauWQYrgdHg8mK35tL2cJJ18mryClN",
