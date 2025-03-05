@@ -14,7 +14,7 @@ D1_API_URL = st.secrets.get("D1_API_URL", os.getenv("D1_API_URL"))
 Bearer = st.secrets.get("Bearer", os.getenv("Bearer"))
 
 HEADERS = {
-    "Authorization": Bearer,
+    "Authorization": "Bearer AmMcKixHW5WauWQYrgdHg8mK35tL2cJJ18mryClN",
     "Content-Type": "application/json"
 }
 
