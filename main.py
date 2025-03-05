@@ -27,9 +27,9 @@ with tab1:
             included_items = []  # 포함된 항목 리스트
 
             # E열(금액)과 G열(설명) 탐색
-            for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=5, max_col=7):  # E, G 컬럼 탐색
+            for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=5, max_col=7):  # E, F 컬럼 탐색
                 amount = row[0].value  # E열: 금액
-                description = row[2].value  # G열: 설명
+                description = row[1].value  # F열: 설명
 
                 if isinstance(amount, (int, float)) and amount in target_values:
                     total_sum += amount
