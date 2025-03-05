@@ -5,6 +5,12 @@ import json
 import os
 import pandas as pd
 
+# 페이지 설정
+st.set_page_config(
+    page_title="엑셀가계부",  # 브라우저 탭 타이틀
+    page_icon="💰"  # 가계부 관련 아이콘 (이모지 사용 가능)
+)
+
 st.title("엑셀 정산 프로그램")
 st.write('개인농협+회사농협+하나카드 엑셀준비 (다운로드 후 다른이름으로 저장 xlsx)')
 st.write('홈페이지 제작 또는 기타 개인수익과 카드에 포함되지 않는 항목은 수동입력해야함')
