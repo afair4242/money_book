@@ -66,7 +66,7 @@ def delete_category(category):
 st.set_page_config(page_title="엑셀가계부", page_icon="💰")
 
 st.title("엑셀 정산 프로그램")
-st.write("홈페이지 제작 또는 기타 개인수익과 카드에 포함되지 않는 항목은 수동입력해야 합니다.")
+st.markdown("<a href='https://banking.nonghyup.com/nhbank.html'>농협</a> / <a href='https://www.hanacard.co.kr/'>하나카드</a>", unsafe_allow_html=True)  
 
 tab1, tab2, tab3 = st.tabs(["호스팅수입(회사)", "배달수입(개인)", "신용카드 지출정산"])
 
